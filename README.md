@@ -16,14 +16,24 @@ de cada par tienda-producto para noviembre de 2015; este EDA prepara el terreno 
 - marco.garcia@galileo.edu
 - 25005795@galileo.edu
 
+## Ramas de trabajo
+
+Cada integrante trabaja en su propia rama y se integra a `main` vía Pull Request:
+
+| Integrante | Rama |
+|---|---|
+| Alfredo | `alfredo` |
+| Mario | `mario` |
+| Marco | `marco` |
+
 ## División del trabajo
 
-| Bloque | Tema | Secciones | Rama |
-|---|---|---|---|
-| 1 | Comprensión y calidad de los datos | 2, 3 y 4 | `feature/calidad-datos` |
-| 2 | Estadísticas, comparación de tiendas/productos y visualizaciones | 5, 7 y 8 | `feature/descriptivo-visualizaciones` |
-| 3 | Comportamiento temporal y autocorrelaciones | 6 y 9 | `feature/temporal-acf` |
-| Los tres | Conclusiones, interpretación y validación final | 10 | — |
+| Bloque | Tema | Secciones |
+|---|---|---|
+| 1 | Comprensión y calidad de los datos | 2, 3 y 4 |
+| 2 | Estadísticas, comparación de tiendas/productos y visualizaciones | 5, 7 y 8 |
+| 3 | Comportamiento temporal y autocorrelaciones | 6 y 9 |
+| Los tres | Conclusiones, interpretación y validación final | 10 |
 
 La asignación de bloques a integrantes está pendiente de definir. El enunciado completo está en [CLAUDE.md](CLAUDE.md).
 
@@ -100,8 +110,8 @@ En VSCode abrir `notebooks/01_exploratory_data_analysis.ipynb`, seleccionar el k
 
 ## Flujo de trabajo en equipo
 
-1. Antes de empezar: `git checkout main && git pull`, luego cambiar a tu rama y traer los cambios de `main`.
-2. Trabajar en la rama del bloque (`feature/...`); **nunca directamente en `main`**.
+1. Antes de empezar: `git checkout main && git pull`, luego cambiar a tu rama (`git checkout <tu-nombre>`) y traer los cambios de `main` (`git merge main`).
+2. Trabajar solo en tu rama (`alfredo`, `mario` o `marco`); **nunca directamente en `main`**. Validar la rama con `git branch --show-current` antes de cada commit y push.
 3. Avisar al equipo antes y después de modificar el notebook compartido.
 4. Registrar cada decisión de tratamiento de datos en [docs/DECISIONES.md](docs/DECISIONES.md) (solo agregar entradas al final).
 5. Hacer commit y push desde **tu propia computadora** y abrir un Pull Request hacia `main`.

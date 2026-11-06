@@ -25,11 +25,13 @@ y no contradigas una decisión registrada sin señalarlo explícitamente.
 
 ### Git y ramas
 - **Nunca trabajar directamente en `main`.** `main` solo recibe cambios vía Pull Request.
-- Ramas de trabajo (una por bloque del proyecto):
-  - `feature/calidad-datos` → Bloque 1 (secciones 2, 3 y 4)
-  - `feature/descriptivo-visualizaciones` → Bloque 2 (secciones 5, 7 y 8)
-  - `feature/temporal-acf` → Bloque 3 (secciones 6 y 9)
-- La sección 10 (conclusiones) la trabajan los tres al final.
+- Ramas de trabajo (una por integrante; ver DEC-005):
+  - `alfredo` → Alfredo
+  - `mario` → Mario
+  - `marco` → Marco
+- Cada integrante trabaja **solo en su rama** el bloque que se le asigne (ver sección 3).
+  La sección 10 (conclusiones) la trabajan los tres al final.
+- **Antes de cada commit y push, validar la rama actual** (`git branch --show-current`).
 - **Cada integrante hace sus propios commits desde su propia computadora**, con su nombre y correo
   configurados en git (`git config --global user.name` / `user.email`). El historial de commits
   es la **evidencia de que los tres trabajaron**; no hacer commits en nombre de otro integrante.
@@ -212,14 +214,17 @@ con una selección representativa (por ejemplo, las series con más ventas). Se 
 
 ---
 
-## 3. División del trabajo (propuesta; aún no asignada a personas)
+## 3. División del trabajo (propuesta; bloques aún no asignados a personas)
 
-| Bloque | Tema | Secciones del enunciado | Rama |
-|---|---|---|---|
-| 1 | Comprensión y calidad de los datos | 2, 3 y 4 | `feature/calidad-datos` |
-| 2 | Estadísticas, comparación de tiendas/productos y visualizaciones | 5, 7 y 8 | `feature/descriptivo-visualizaciones` |
-| 3 | Comportamiento temporal y autocorrelaciones | 6 y 9 | `feature/temporal-acf` |
-| Los tres | Conclusiones, interpretación y validación final | 10 | (al integrar en `main`) |
+| Bloque | Tema | Secciones del enunciado |
+|---|---|---|
+| 1 | Comprensión y calidad de los datos | 2, 3 y 4 |
+| 2 | Estadísticas, comparación de tiendas/productos y visualizaciones | 5, 7 y 8 |
+| 3 | Comportamiento temporal y autocorrelaciones | 6 y 9 |
+| Los tres | Conclusiones, interpretación y validación final | 10 |
+
+Ramas por integrante: `alfredo`, `mario`, `marco`. Cada uno desarrolla en su rama el bloque que le toque
+e integra a `main` vía Pull Request.
 
 Dependencias entre bloques: los bloques 2 y 3 dependen de las decisiones de limpieza del bloque 1
 (precios ≤ 0, devoluciones, duplicados, tiendas repetidas). Esas decisiones deben quedar en
