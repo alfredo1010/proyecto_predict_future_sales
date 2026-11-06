@@ -1,0 +1,13 @@
+# Entorno conda del proyecto.
+# Crear:      conda env create -f environment.yml
+# Actualizar: conda env update -f environment.yml --prune
+# Las librerías se definen en requirements.txt (no duplicar aquí).
+name: predict_future_sales
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - -r requirements.txt

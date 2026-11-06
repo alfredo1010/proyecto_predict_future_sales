@@ -1,0 +1,19 @@
+# Dependencias del proyecto (fuente única de verdad).
+# Si agregas una librería, agrégala AQUÍ; environment.yml instala desde este archivo.
+ipykernel
+ipython
+jupyterlab
+loguru
+matplotlib
+notebook
+numpy
+pandas
+pip
+python-dotenv
+ruff
+scikit-learn
+seaborn
+statsmodels
+tqdm
+typer
+-e .
