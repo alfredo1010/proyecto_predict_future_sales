@@ -15,7 +15,7 @@ Registro de las decisiones del proyecto: **qué** se decidió, **quién**, **en 
 ### DEC-XXX — Título corto
 - **Fecha:** AAAA-MM-DD
 - **Autor:** correo@galileo.edu
-- **Rama:** feature/...
+- **Rama:** alfredo | mario | marco
 - **Sección del enunciado:** N
 - **Decisión:** qué se hará.
 - **Justificación:** por qué (con datos/evidencia si aplica).
@@ -79,3 +79,17 @@ Registro de las decisiones del proyecto: **qué** se decidió, **quién**, **en 
   de cada integrante.
 - **Alternativas descartadas:** notebooks borrador por integrante (se acordó evaluarlo internamente).
 - **Estado:** Vigente
+
+### DEC-005 — Ramas por integrante en lugar de ramas por bloque
+- **Fecha:** 2026-11-05
+- **Autor:** alfredo.mux@galileo.edu
+- **Rama:** alfredo
+- **Sección del enunciado:** General
+- **Decisión:** Las ramas de trabajo pasan a ser una por integrante: `alfredo`, `mario` y `marco`
+  (renombradas desde `feature/calidad-datos`, `feature/descriptivo-visualizaciones` y `feature/temporal-acf`).
+  Cada integrante trabaja en su rama el bloque que se le asigne y se integra a `main` vía Pull Request.
+  El resto de DEC-004 (un solo notebook compartido, avisar antes/después de modificarlo, commits propios) sigue vigente.
+- **Justificación:** La asignación de bloques a personas aún no está definida; una rama por integrante
+  facilita que cada uno trabaje y evidencie su participación sin depender de esa asignación.
+- **Alternativas descartadas:** ramas por bloque (DEC-004).
+- **Estado:** Reemplaza parcialmente a DEC-004 (nombres de ramas)
