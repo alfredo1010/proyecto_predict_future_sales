@@ -229,3 +229,58 @@ e integra a `main` vía Pull Request.
 Dependencias entre bloques: los bloques 2 y 3 dependen de las decisiones de limpieza del bloque 1
 (precios ≤ 0, devoluciones, duplicados, tiendas repetidas). Esas decisiones deben quedar en
 `docs/DECISIONES.md` lo antes posible para que los demás las apliquen igual.
+
+---
+
+## 4. Estado del avance (actualizar al terminar cada bloque)
+
+> Si un integrante le pide a Claude "ponte al día" o "qué se ha hecho", Claude debe leer esta sección,
+> `docs/DECISIONES.md` y el notebook, y resumir: qué está terminado, qué funciones usar y qué queda pendiente.
+
+| Secciones | Estado | Responsable | Rama |
+|---|---|---|---|
+| 1 — Estructura y repositorio | ✅ Terminado (falta 1.f: screenshots del pull de cada integrante) | Alfredo | `main` |
+| 2, 3, 4 — Bloque 1 (comprensión, validación, faltantes/duplicados) | ✅ Terminado y ejecutado en el notebook | Alfredo | `alfredo` |
+| 5, 7, 8 — Bloque 2 | ⏳ Pendiente | (por asignar) | — |
+| 6, 9 — Bloque 3 | ⏳ Pendiente | (por asignar) | — |
+| 10 — Conclusiones | ⏳ Pendiente (los tres) | — | — |
+
+### Cómo empezar a trabajar sobre los datos limpios (bloques 2 y 3)
+
+El notebook ya deja la variable `sales_train` **limpia** al final de la sección 4. Para trabajar fuera del notebook
+o reconstruirla desde cero, usar las funciones de `predict_future_sales/dataset.py` (no reimplementar la limpieza):
+
+| Función / constante | Qué hace | Decisión |
+|---|---|---|
+| `cargar_datos()` | Lee los 5 CSV crudos de `data/raw/` en un dict (`sales_train`, `items`, `item_categories`, `shops`, `test`) | — |
+| `convertir_cantidad_entera(df)` | `item_cnt_day` → `int64` | DEC-006 |
+| `convertir_fecha(df)` | `date` (texto `dd.mm.aaaa`) → `datetime64` | DEC-006 |
+| `limpiar_sales_train(df)` | Elimina 6 duplicados exactos, corrige el precio -1, unifica tiendas 0→57, 1→58, 11→10 | DEC-009, 010, 011 |
+| `cargar_ventas_limpias()` | Atajo: todo lo anterior en un paso → `sales_train` limpio (2,935,843 filas, 57 tiendas) | — |
+| `MAPEO_TIENDAS_DUPLICADAS` | `{0: 57, 1: 58, 11: 10}` | DEC-011 |
+
+**Reglas que ya están decididas (no cambiarlas sin una nueva entrada en DECISIONES.md):**
+- Frecuencia de análisis **mensual** con `date_block_num`; diaria solo para la serie total (sección 9) y día de la semana (sección 6) — DEC-007.
+- Las **devoluciones se conservan** (restan de las ventas netas) — DEC-009.
+- Meses sin registros = **ventas 0**, no nulos — DEC-008.
+- `ingreso = item_price × item_cnt_day` (aún no está creada; se construye en la sección 5).
+- `shops.csv` sigue teniendo 60 filas: al cruzar con nombres de tienda, las tiendas 0, 1 y 11 ya no aparecen en `sales_train`.
+
+### Datos clave del dataset (resultados del bloque 1)
+- `sales_train`: 2,935,849 filas crudas → 2,935,843 limpias; 01-01-2013 a 31-10-2015 (1,034 días, 34 meses, `date_block_num` 0-33, 100 % consistente con la fecha).
+- Catálogos: 22,170 productos, 84 categorías, 60 tiendas (57 tras unificar). `test`: 214,200 pares.
+- Sin nulos. 7,356 devoluciones (0.25 %). Dispersión tienda-producto: 0.67 % diaria, 3.69 % semanal, 11.16 % mensual.
+- Solo 32 de 60 tiendas venden en los 34 meses; 15 abrieron después de ene-2013 y 16 dejaron de vender antes de oct-2015.
+
+### Hallazgos pendientes para otras secciones
+- **5 / 7 / 8 (nombres en ruso):** está acordado (aún no hecho) traducir **solo** categorías (84) y tiendas (60) en
+  `references/traduccion_categorias.csv` y `references/traduccion_tiendas.csv` (con `grupo`/`subgrupo` y `ciudad`),
+  revisadas por el equipo; los productos (22,170) no se traducen salvo el top N de las gráficas. Requiere agregar
+  `!references/*.csv` al `.gitignore` y registrar la decisión. Los originales en ruso nunca se modifican.
+- **7.c (outliers):** cantidad máxima de 2,169 unidades en un día; revisar precios y cantidades extremos.
+  Tiendas especiales: **9** (`Выездная Торговля`, venta itinerante: 14 días con ventas en 742) y **20**
+  (`Москва "Распродажа"`, liquidación: 9 días en 368) son tiendas de evento; **12** es tienda en línea; **36** abrió el 18-10-2015.
+- **6 (temporal):** transacciones por día entre 1,123 y 9,434 (mediana ~2,590): hay picos marcados.
+- **10.b:** `test` es una cuadrícula completa de 42 tiendas × 5,100 productos; calcular el % de pares con historial en train.
+- **Memoria:** `sales_train` ocupa ~290 MB; si un equipo tiene poca RAM, considerar tipos más livianos (registrar decisión).
+- **Notebook:** con las gráficas crecerá de tamaño; acordar que una sola persona re-ejecute el notebook completo antes de cada integración a `main`.

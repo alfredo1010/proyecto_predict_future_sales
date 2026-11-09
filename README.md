@@ -37,6 +37,27 @@ Cada integrante trabaja en su propia rama y se integra a `main` vía Pull Reques
 
 La asignación de bloques a integrantes está pendiente de definir. El enunciado completo está en [CLAUDE.md](CLAUDE.md).
 
+## Estado del avance
+
+| Secciones | Estado | Responsable |
+|---|---|---|
+| 1 — Estructura y repositorio | ✅ (falta 1.f: screenshots del pull) | Alfredo |
+| 2, 3, 4 — Comprensión, validación, faltantes y duplicados | ✅ Terminado | Alfredo |
+| 5, 7, 8 — Estadísticas, comparación y visualizaciones | ⏳ Pendiente | — |
+| 6, 9 — Temporal y ACF/PACF | ⏳ Pendiente | — |
+| 10 — Conclusiones | ⏳ Pendiente | Los tres |
+
+El detalle (funciones para cargar los datos limpios, decisiones vigentes y hallazgos pendientes para cada sección)
+está en la sección **"4. Estado del avance"** de [CLAUDE.md](CLAUDE.md) y en [docs/DECISIONES.md](docs/DECISIONES.md).
+
+### Ponerse al día con Claude Code
+Después de clonar (o hacer pull), abrir el proyecto en VSCode y pedirle a Claude Code, por ejemplo:
+
+> *"Lee CLAUDE.md y docs/DECISIONES.md y dime qué se ha hecho, qué funciones debo usar y qué me queda pendiente para las secciones X."*
+
+Claude Code lee `CLAUDE.md` automáticamente; ahí está el enunciado completo, las reglas del equipo y el estado del avance.
+Para los datos limpios usar `cargar_ventas_limpias()` de `predict_future_sales/dataset.py` (no reimplementar la limpieza).
+
 ---
 
 ## Requisitos
