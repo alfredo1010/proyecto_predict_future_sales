@@ -31,11 +31,11 @@ Cada integrante trabaja en su propia rama y se integra a `main` vía Pull Reques
 | Bloque | Tema | Secciones |
 |---|---|---|
 | 1 | Comprensión y calidad de los datos | 2, 3 y 4 |
-| 2 | Estadísticas, comparación de tiendas/productos y visualizaciones | 5, 7 y 8 |
-| 3 | Comportamiento temporal y autocorrelaciones | 6 y 9 |
-| Los tres | Conclusiones, interpretación y validación final | 10 |
+| 2 | Estadísticas, exploración temporal y comparación de tiendas/productos | 5, 6 y 7 |
+| 3 | Visualizaciones clave, ACF/PACF y conclusiones | 8, 9 y 10 |
 
-La asignación de bloques a integrantes está pendiente de definir. El enunciado completo está en [CLAUDE.md](CLAUDE.md).
+Los bloques siguen el orden del enunciado (DEC-012). La sección 10 la redacta el responsable del bloque 3 y la
+revisan los tres. La asignación de los bloques 2 y 3 a integrantes está pendiente de definir. El enunciado completo está en [CLAUDE.md](CLAUDE.md).
 
 ## Estado del avance
 
@@ -43,9 +43,8 @@ La asignación de bloques a integrantes está pendiente de definir. El enunciado
 |---|---|---|
 | 1 — Estructura y repositorio | ✅ (falta 1.f: screenshots del pull) | Alfredo |
 | 2, 3, 4 — Comprensión, validación, faltantes y duplicados | ✅ Terminado | Alfredo |
-| 5, 7, 8 — Estadísticas, comparación y visualizaciones | ⏳ Pendiente | — |
-| 6, 9 — Temporal y ACF/PACF | ⏳ Pendiente | — |
-| 10 — Conclusiones | ⏳ Pendiente | Los tres |
+| 5, 6, 7 — Descriptivo, temporal y comparación | ⏳ Pendiente | — |
+| 8, 9, 10 — Visualizaciones, ACF/PACF y conclusiones | ⏳ Pendiente | — (10 revisada por los tres) |
 
 El detalle (funciones para cargar los datos limpios, decisiones vigentes y hallazgos pendientes para cada sección)
 está en la sección **"4. Estado del avance"** de [CLAUDE.md](CLAUDE.md) y en [docs/DECISIONES.md](docs/DECISIONES.md).

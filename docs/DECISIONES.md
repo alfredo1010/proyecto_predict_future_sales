@@ -180,3 +180,17 @@ Registro de las decisiones del proyecto: **qué** se decidió, **quién**, **en 
 - **Alternativas descartadas:** no unificar (fragmentaría la historia de 3 tiendas que están en test);
   unificar también 23/24 y 39/40.
 - **Estado:** Vigente
+
+### DEC-012 — División del trabajo en orden de secciones: bloque 2 = 5, 6, 7 y bloque 3 = 8, 9, 10
+- **Fecha:** 2026-11-11
+- **Autor:** alfredo.mux@galileo.edu
+- **Rama:** alfredo
+- **Sección del enunciado:** General
+- **Decisión:** Los bloques siguen el orden del enunciado: bloque 1 = secciones 2, 3 y 4 (terminado);
+  bloque 2 = 5, 6 y 7 (descriptivo, temporal y comparación); bloque 3 = 8, 9 y 10 (visualizaciones, ACF/PACF y
+  conclusiones). La sección 10 la redacta el responsable del bloque 3 y los otros dos la revisan y aportan antes
+  de integrarla a `main`. Las agregaciones de las secciones 5-7 se dejan como funciones en
+  `predict_future_sales/features.py` para que el bloque 3 las reutilice. Los bloques 2 y 3 aún no están asignados.
+- **Justificación:** Trabajar en orden facilita seguir el notebook y que cada bloque parta del anterior.
+- **Alternativas descartadas:** división temática anterior (bloque 2 = 5, 7, 8; bloque 3 = 6, 9; sección 10 los tres).
+- **Estado:** Reemplaza la división de bloques descrita en CLAUDE.md sección 3 (sin número de decisión previo)

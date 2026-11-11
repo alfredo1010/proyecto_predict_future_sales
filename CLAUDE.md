@@ -30,7 +30,7 @@ y no contradigas una decisión registrada sin señalarlo explícitamente.
   - `mario` → Mario
   - `marco` → Marco
 - Cada integrante trabaja **solo en su rama** el bloque que se le asigne (ver sección 3).
-  La sección 10 (conclusiones) la trabajan los tres al final.
+  La sección 10 (conclusiones) la redacta el responsable del bloque 3, y los otros dos la revisan y aportan antes de integrarla (DEC-012).
 - **Antes de cada commit y push, validar la rama actual** (`git branch --show-current`).
 - **Cada integrante hace sus propios commits desde su propia computadora**, con su nombre y correo
   configurados en git (`git config --global user.name` / `user.email`). El historial de commits
@@ -214,21 +214,25 @@ con una selección representativa (por ejemplo, las series con más ventas). Se 
 
 ---
 
-## 3. División del trabajo (propuesta; bloques aún no asignados a personas)
+## 3. División del trabajo (en orden de secciones; DEC-012; bloques 2 y 3 aún no asignados a personas)
 
 | Bloque | Tema | Secciones del enunciado |
 |---|---|---|
 | 1 | Comprensión y calidad de los datos | 2, 3 y 4 |
-| 2 | Estadísticas, comparación de tiendas/productos y visualizaciones | 5, 7 y 8 |
-| 3 | Comportamiento temporal y autocorrelaciones | 6 y 9 |
-| Los tres | Conclusiones, interpretación y validación final | 10 |
+| 2 | Estadísticas, exploración temporal y comparación de tiendas/productos | 5, 6 y 7 |
+| 3 | Visualizaciones clave, ACF/PACF y conclusiones | 8, 9 y 10 |
+
+La sección 10 la redacta el responsable del bloque 3; los otros dos integrantes la revisan y aportan antes de
+integrarla a `main`.
 
 Ramas por integrante: `alfredo`, `mario`, `marco`. Cada uno desarrolla en su rama el bloque que le toque
 e integra a `main` vía Pull Request.
 
 Dependencias entre bloques: los bloques 2 y 3 dependen de las decisiones de limpieza del bloque 1
-(precios ≤ 0, devoluciones, duplicados, tiendas repetidas). Esas decisiones deben quedar en
-`docs/DECISIONES.md` lo antes posible para que los demás las apliquen igual.
+(precios ≤ 0, devoluciones, duplicados, tiendas repetidas), ya registradas en `docs/DECISIONES.md` (DEC-006 a DEC-011).
+El bloque 3 depende además del bloque 2: las agregaciones que se construyan en las secciones 5-7 (ventas mensuales,
+ingreso, ventas por tienda/categoría) deben quedar como funciones en `predict_future_sales/features.py` para que
+las secciones 8 y 9 las reutilicen sin reimplementarlas.
 
 ---
 
@@ -241,9 +245,8 @@ Dependencias entre bloques: los bloques 2 y 3 dependen de las decisiones de limp
 |---|---|---|---|
 | 1 — Estructura y repositorio | ✅ Terminado (falta 1.f: screenshots del pull de cada integrante) | Alfredo | `main` |
 | 2, 3, 4 — Bloque 1 (comprensión, validación, faltantes/duplicados) | ✅ Terminado y ejecutado en el notebook | Alfredo | `alfredo` |
-| 5, 7, 8 — Bloque 2 | ⏳ Pendiente | (por asignar) | — |
-| 6, 9 — Bloque 3 | ⏳ Pendiente | (por asignar) | — |
-| 10 — Conclusiones | ⏳ Pendiente (los tres) | — | — |
+| 5, 6, 7 — Bloque 2 (descriptivo, temporal, comparación) | ⏳ Pendiente | (por asignar) | — |
+| 8, 9, 10 — Bloque 3 (visualizaciones, ACF/PACF, conclusiones) | ⏳ Pendiente (10 revisada por los tres) | (por asignar) | — |
 
 ### Cómo empezar a trabajar sobre los datos limpios (bloques 2 y 3)
 
@@ -273,10 +276,10 @@ o reconstruirla desde cero, usar las funciones de `predict_future_sales/dataset.
 - Solo 32 de 60 tiendas venden en los 34 meses; 15 abrieron después de ene-2013 y 16 dejaron de vender antes de oct-2015.
 
 ### Hallazgos pendientes para otras secciones
-- **5 / 7 / 8 (nombres en ruso):** está acordado (aún no hecho) traducir **solo** categorías (84) y tiendas (60) en
+- **5 / 7 / 8 (nombres en ruso, bloques 2 y 3):** está acordado (aún no hecho) traducir **solo** categorías (84) y tiendas (60) en
   `references/traduccion_categorias.csv` y `references/traduccion_tiendas.csv` (con `grupo`/`subgrupo` y `ciudad`),
   revisadas por el equipo; los productos (22,170) no se traducen salvo el top N de las gráficas. Requiere agregar
-  `!references/*.csv` al `.gitignore` y registrar la decisión. Los originales en ruso nunca se modifican.
+  `!references/*.csv` al `.gitignore` y registrar la decisión (será DEC-013). Los originales en ruso nunca se modifican.
 - **7.c (outliers):** cantidad máxima de 2,169 unidades en un día; revisar precios y cantidades extremos.
   Tiendas especiales: **9** (`Выездная Торговля`, venta itinerante: 14 días con ventas en 742) y **20**
   (`Москва "Распродажа"`, liquidación: 9 días en 368) son tiendas de evento; **12** es tienda en línea; **36** abrió el 18-10-2015.
