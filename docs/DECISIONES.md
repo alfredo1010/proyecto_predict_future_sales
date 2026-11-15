@@ -194,3 +194,14 @@ Registro de las decisiones del proyecto: **qué** se decidió, **quién**, **en 
 - **Justificación:** Trabajar en orden facilita seguir el notebook y que cada bloque parta del anterior.
 - **Alternativas descartadas:** división temática anterior (bloque 2 = 5, 7, 8; bloque 3 = 6, 9; sección 10 los tres).
 - **Estado:** Reemplaza la división de bloques descrita en CLAUDE.md sección 3 (sin número de decisión previo)
+
+### DEC-013 — Indicadores netos y funciones reutilizables para el bloque 2
+
+- **Fecha:** 2026-11-14
+- **Autor:** marco.garcia@galileo.edu
+- **Rama:** marco
+- **Sección del enunciado:** 5, 6 y 7
+- **Decisión:** Marco desarrolla el bloque 2; Mario el bloque 3. Se analizan unidades netas (item_cnt_day) e ingresos netos (item_price × item_cnt_day), conservando devoluciones y la limpieza DEC-009 a DEC-011. Las agregaciones por tienda, producto y mes se centralizan en predict_future_sales/features.py para reutilizarlas en las secciones 8 y 9. No se recortan extremos durante el EDA.
+- **Justificación:** Mantiene trazabilidad con el procesamiento del bloque 1, permite comparar métricas y evita duplicación de código. Se incluye una normalización descriptiva por meses observados para comparar tiendas.
+- **Alternativas descartadas:** Eliminar devoluciones, confundir ingresos con unidades, comparar tiendas únicamente por acumulados y eliminar outliers sin análisis.
+- **Estado:** Vigente
