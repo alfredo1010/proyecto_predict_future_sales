@@ -205,3 +205,20 @@ Registro de las decisiones del proyecto: **qué** se decidió, **quién**, **en 
 - **Justificación:** Mantiene trazabilidad con el procesamiento del bloque 1, permite comparar métricas y evita duplicación de código. Se incluye una normalización descriptiva por meses observados para comparar tiendas.
 - **Alternativas descartadas:** Eliminar devoluciones, confundir ingresos con unidades, comparar tiendas únicamente por acumulados y eliminar outliers sin análisis.
 - **Estado:** Vigente
+
+### DEC-014 — Grupos de categoría en español para las visualizaciones del bloque 3
+- **Fecha:** 2026-11-15
+- **Autor:** 25005795@galileo.edu
+- **Rama:** mario
+- **Sección del enunciado:** 8, 9 y 10
+- **Decisión:** Para gráficas y resúmenes, las 84 categorías se agrupan en 14 grupos con nombre en español
+  (`GRUPOS_CATEGORIA_ES` y `agregar_grupo_categoria()` en `predict_future_sales/features.py`), tomando el prefijo
+  del nombre ruso antes de " - " (p. ej. `Кино - DVD` → "Cine"). `item_categories.csv` no se modifica; las
+  categorías individuales se siguen mostrando con su id y nombre original. La selección de series para ACF/PACF
+  (sección 9) usa las de mayor volumen con historia suficiente: tiendas que venden los 34 meses, y productos y pares
+  tienda-producto con ventas en al menos 30 meses (un par por producto).
+- **Justificación:** 84 categorías en ruso no se leen en un heatmap; 14 grupos permiten ver la mezcla de ventas en
+  el tiempo. Las series casi todas en ceros (productos de vida corta) no permiten interpretar la ACF/PACF.
+- **Alternativas descartadas:** traducir las 84 categorías en un CSV de `references/` (acordado como pendiente en
+  CLAUDE.md; esta agrupación no lo impide); seleccionar series solo por volumen total (los 3 pares serían la misma bolsa 20949).
+- **Estado:** Vigente
