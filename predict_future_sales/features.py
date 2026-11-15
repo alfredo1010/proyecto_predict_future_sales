@@ -117,3 +117,115 @@ def serie_mensual(
         "year": 2013 + meses // 12, "month": meses % 12 + 1, "day": 1
     }))
     return resultado
+
+
+# ---------------------------------------------------------------------------
+# Bloque 3 (secciones 8, 9 y 10)
+# ---------------------------------------------------------------------------
+
+# Grupo de categoría (texto antes de " - " en item_category_name) -> nombre en español.
+# Solo para presentar gráficas (DEC-014); item_categories.csv no se modifica.
+GRUPOS_CATEGORIA_ES = {
+    "PC": "Accesorios",
+    "Аксессуары": "Accesorios",
+    "Билеты (Цифра)": "Servicios y otros",
+    "Доставка товара": "Servicios y otros",
+    "Игровые консоли": "Consolas",
+    "Игры": "Juegos de consola",
+    "Игры Android": "Juegos digitales móviles/MAC",
+    "Игры MAC": "Juegos digitales móviles/MAC",
+    "Игры PC": "Juegos PC",
+    "Карты оплаты": "Tarjetas de pago",
+    "Карты оплаты (Кино, Музыка, Игры)": "Tarjetas de pago",
+    "Кино": "Cine",
+    "Книги": "Libros",
+    "Музыка": "Música",
+    "Подарки": "Regalos",
+    "Программы": "Programas",
+    "Служебные": "Servicios y otros",
+    "Чистые носители (шпиль)": "Medios vírgenes",
+    "Чистые носители (штучные)": "Medios vírgenes",
+    "Элементы питания": "Baterías",
+}
+
+
+def agregar_grupo_categoria(item_categories: pd.DataFrame) -> pd.DataFrame:
+    """Devuelve una copia de ``item_categories`` con la columna ``grupo_categoria``.
+
+    El grupo es el prefijo del nombre ruso (antes de " - ") traducido con
+    ``GRUPOS_CATEGORIA_ES``. Falla si aparece un prefijo sin traducción.
+    """
+    resultado = item_categories.copy()
+    prefijo = resultado["item_category_name"].str.split(" - ").str[0].str.strip()
+    resultado["grupo_categoria"] = prefijo.map(GRUPOS_CATEGORIA_ES)
+    sin_grupo = prefijo[resultado["grupo_categoria"].isna()].unique()
+    if len(sin_grupo):
+        raise ValueError(f"Prefijos de categoría sin grupo: {list(sin_grupo)}")
+    return resultado
+
+
+def matriz_mensual(
+    ventas: pd.DataFrame,
+    dimension: str,
+    valor: str = "unidades_netas",
+    ultimo_bloque: int = ULTIMO_BLOQUE_HISTORICO,
+) -> pd.DataFrame:
+    """Matriz ``dimension`` x mes (``date_block_num`` 0..33) para heatmaps.
+
+    Los meses sin registros quedan en 0 (DEC-008). ``ventas`` debe contener la
+    columna ``dimension`` (p. ej. ``shop_id`` o ``grupo_categoria``).
+    """
+    resumen = resumen_ventas(ventas, ["date_block_num", dimension])
+    return (
+        resumen.pivot(index=dimension, columns="date_block_num", values=valor)
+        .reindex(columns=range(ultimo_bloque + 1))
+        .fillna(0)
+    )
+
+
+def cobertura_test(test: pd.DataFrame, ventas: pd.DataFrame) -> pd.DataFrame:
+    """Clasifica cada par tienda-producto de ``test`` según su historial en train.
+
+    Categorías (excluyentes): ``par con historial`` (el par se vendió alguna vez),
+    ``producto conocido, par nuevo`` (el producto se vendió en otra tienda) y
+    ``producto nuevo`` (el producto nunca aparece en train). Devuelve ``test``
+    con la columna ``historial``.
+    """
+    pares = ventas[["shop_id", "item_id"]].drop_duplicates().assign(_par=True)
+    resultado = test.merge(pares, on=["shop_id", "item_id"], how="left", validate="one_to_one")
+    producto_conocido = resultado["item_id"].isin(ventas["item_id"].unique())
+    resultado["historial"] = "producto nuevo"
+    resultado.loc[producto_conocido, "historial"] = "producto conocido, par nuevo"
+    resultado.loc[resultado["_par"].fillna(False).astype(bool), "historial"] = "par con historial"
+    return resultado.drop(columns="_par")
+
+
+def resumen_autocorrelacion(
+    serie: pd.Series, nlags: int, rezago_estacional: int | None = None
+) -> dict:
+    """Rezagos significativos de ACF y PACF (95 %) y prueba ADF de estacionariedad.
+
+    Un rezago es significativo si su coeficiente cae fuera de la banda de
+    confianza que dibujan ``plot_acf``/``plot_pacf``. ``rezago_estacional``
+    (12 en mensual, 7 en diaria) se reporta aparte si está dentro de ``nlags``.
+    """
+    from statsmodels.tsa.stattools import acf, adfuller, pacf
+
+    valores = pd.Series(serie).astype(float).to_numpy()
+    nlags_pacf = min(nlags, len(valores) // 2 - 1)
+    coef_acf, ic_acf = acf(valores, nlags=nlags, alpha=0.05)
+    coef_pacf, ic_pacf = pacf(valores, nlags=nlags_pacf, alpha=0.05, method="ywm")
+    sig_acf = [k for k in range(1, nlags + 1) if abs(coef_acf[k]) > ic_acf[k, 1] - coef_acf[k]]
+    sig_pacf = [
+        k for k in range(1, nlags_pacf + 1) if abs(coef_pacf[k]) > ic_pacf[k, 1] - coef_pacf[k]
+    ]
+    resultado = {
+        "acf_rezago_1": round(float(coef_acf[1]), 2),
+        "rezagos_sig_acf": ", ".join(map(str, sig_acf)) or "ninguno",
+        "rezagos_sig_pacf": ", ".join(map(str, sig_pacf)) or "ninguno",
+        "adf_p_valor": round(float(adfuller(valores, autolag="AIC")[1]), 3),
+    }
+    if rezago_estacional is not None and rezago_estacional <= nlags:
+        resultado["rezago_estacional"] = rezago_estacional
+        resultado["acf_estacional"] = round(float(coef_acf[rezago_estacional]), 2)
+    return resultado
