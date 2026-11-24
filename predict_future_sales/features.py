@@ -6,6 +6,8 @@ Las unidades e ingresos son *netos*: las devoluciones negativas se conservan.
 """
 
 from collections.abc import Sequence
+
+import numpy as np
 import pandas as pd
 
 MES_INICIAL = pd.Timestamp("2013-01-01")
@@ -45,9 +47,11 @@ def resumen_ventas(ventas: pd.DataFrame, dimensiones: str | Sequence[str]) -> pd
     datos = _con_ingresos(ventas)
     return (
         datos.groupby(dimensiones, observed=True, dropna=False, sort=True)
-        .agg(unidades_netas=("item_cnt_day", "sum"),
-             ingresos_netos=("ingresos", "sum"),
-             registros=("item_cnt_day", "size"))
+        .agg(
+            unidades_netas=("item_cnt_day", "sum"),
+            ingresos_netos=("ingresos", "sum"),
+            registros=("item_cnt_day", "size"),
+        )
         .reset_index()
     )
 
@@ -63,9 +67,11 @@ def ventas_por_periodo(ventas: pd.DataFrame, frecuencia: str = "MS") -> pd.DataF
     datos = _con_ingresos(ventas)
     resultado = (
         datos.resample(frecuencia, on="date")
-        .agg(unidades_netas=("item_cnt_day", "sum"),
-             ingresos_netos=("ingresos", "sum"),
-             registros=("item_cnt_day", "size"))
+        .agg(
+            unidades_netas=("item_cnt_day", "sum"),
+            ingresos_netos=("ingresos", "sum"),
+            registros=("item_cnt_day", "size"),
+        )
         .reset_index()
         .rename(columns={"date": "periodo"})
     )
@@ -81,15 +87,19 @@ def ventas_mensuales_por(
     sin registros no aparece; al crear series para ACF/PACF se debe completar
     explícitamente con 0 (ver ``serie_mensual``), evitando paneles gigantes.
     """
-    extras = [] if dimensiones is None else (
-        [dimensiones] if isinstance(dimensiones, str) else list(dimensiones)
+    extras = (
+        []
+        if dimensiones is None
+        else ([dimensiones] if isinstance(dimensiones, str) else list(dimensiones))
     )
     extras = [x for x in extras if x != "date_block_num"]
     resultado = resumen_ventas(ventas, ["date_block_num", *extras])
     meses = resultado["date_block_num"].astype(int)
-    resultado.insert(1, "fecha_mes", pd.to_datetime({
-        "year": 2013 + meses // 12, "month": meses % 12 + 1, "day": 1
-    }))
+    resultado.insert(
+        1,
+        "fecha_mes",
+        pd.to_datetime({"year": 2013 + meses // 12, "month": meses % 12 + 1, "day": 1}),
+    )
     return resultado
 
 
@@ -113,9 +123,11 @@ def serie_mensual(
     resultado = resumen_ventas(datos, "date_block_num").set_index("date_block_num")
     resultado = resultado.reindex(range(ultimo_bloque + 1), fill_value=0).reset_index()
     meses = resultado["date_block_num"].astype(int)
-    resultado.insert(1, "fecha_mes", pd.to_datetime({
-        "year": 2013 + meses // 12, "month": meses % 12 + 1, "day": 1
-    }))
+    resultado.insert(
+        1,
+        "fecha_mes",
+        pd.to_datetime({"year": 2013 + meses // 12, "month": meses % 12 + 1, "day": 1}),
+    )
     return resultado
 
 
@@ -229,3 +241,176 @@ def resumen_autocorrelacion(
         resultado["rezago_estacional"] = rezago_estacional
         resultado["acf_estacional"] = round(float(coef_acf[rezago_estacional]), 2)
     return resultado
+
+
+# ---------------------------------------------------------------------------
+# Parte 2 — Punto 1 (02_feature_exploration): cuadrícula mensual, lags y mapeos
+# ---------------------------------------------------------------------------
+
+MES_FIN_ENTRENAMIENTO = 26  # 80 % secuencial: entrenamiento 0-26, validación 27-33 (DEC-015)
+MES_TEST = 34  # noviembre 2015 (test.csv)
+LIMITES_OBJETIVO = (
+    0,
+    20,
+)  # recorte de item_cnt_month, igual que la evaluación de Kaggle (DEC-016)
+
+# Lags seleccionados en 02_feature_exploration (DEC-015): nivel -> (columnas de agrupación, rezagos)
+LAGS_SELECCIONADOS = {
+    "par": (["shop_id", "item_id"], [1, 2, 3, 12]),
+    "item": (["item_id"], [1]),
+    "tienda": (["shop_id"], [1, 12]),
+    "categoria": (["item_category_id"], [1, 12]),
+}
+
+# Mapeo tienda -> ciudad (primera palabra del nombre ruso) y tipo de tienda (DEC-016)
+MAPEO_CIUDAD_ES = {
+    "Адыгея": "Adigueya",
+    "Балашиха": "Balashikha",
+    "Волжский": "Volzhski",
+    "Вологда": "Vólogda",
+    "Воронеж": "Vorónezh",
+    "Выездная": "Itinerante",
+    "Жуковский": "Zhukovski",
+    "Интернет-магазин": "En línea",
+    "Казань": "Kazán",
+    "Калуга": "Kaluga",
+    "Коломна": "Kolomna",
+    "Красноярск": "Krasnoyarsk",
+    "Курск": "Kursk",
+    "Москва": "Moscú",
+    "Мытищи": "Mytishchi",
+    "Н.Новгород": "Nizhni Nóvgorod",
+    "Новосибирск": "Novosibirsk",
+    "Омск": "Omsk",
+    "РостовНаДону": "Rostov del Don",
+    "СПб": "San Petersburgo",
+    "Самара": "Samara",
+    "Сергиев": "Sérguiev Posad",
+    "Сургут": "Surgut",
+    "Томск": "Tomsk",
+    "Тюмень": "Tiumén",
+    "Уфа": "Ufá",
+    "Химки": "Jimki",
+    "Цифровой": "En línea",
+    "Чехов": "Chéjov",
+    "Якутск": "Yakutsk",
+    "Ярославль": "Yaroslavl",
+}
+TIENDAS_EN_LINEA = {12, 55}  # tienda en línea y almacén digital
+TIENDAS_EVENTO = {9, 20}  # venta itinerante y liquidación
+
+
+def agregar_info_tienda(shops: pd.DataFrame) -> pd.DataFrame:
+    """Copia de ``shops`` con ``ciudad`` (en español) y ``tipo_tienda`` (física, en línea, evento).
+
+    Falla si aparece una primera palabra de nombre sin traducción en ``MAPEO_CIUDAD_ES``.
+    """
+    resultado = shops.copy()
+    primera = resultado["shop_name"].str.replace("!", "", regex=False).str.split().str[0]
+    resultado["ciudad"] = primera.map(MAPEO_CIUDAD_ES)
+    sin_ciudad = primera[resultado["ciudad"].isna()].unique()
+    if len(sin_ciudad):
+        raise ValueError(f"Nombres de tienda sin ciudad: {list(sin_ciudad)}")
+    resultado["tipo_tienda"] = "física"
+    resultado.loc[resultado["shop_id"].isin(TIENDAS_EN_LINEA), "tipo_tienda"] = "en línea"
+    resultado.loc[resultado["shop_id"].isin(TIENDAS_EVENTO), "tipo_tienda"] = "evento"
+    return resultado
+
+
+def construir_cuadricula_mensual(
+    sales: pd.DataFrame, test: pd.DataFrame | None = None
+) -> pd.DataFrame:
+    """Cuadrícula mes x tienda x producto con ``item_cnt_month`` (suma de ``item_cnt_day``).
+
+    Para cada mes 0-33 combina todas las tiendas y todos los productos con registros en ese mes
+    y rellena con 0 las combinaciones sin ventas (DEC-008). Si se pasa ``test``, agrega sus pares
+    como mes 34 con ``item_cnt_month`` nulo (es lo que se predice). ``item_cnt_month`` no se recorta.
+    """
+    bloques = []
+    for mes, datos in sales.groupby("date_block_num"):
+        tiendas = datos["shop_id"].unique()
+        productos = datos["item_id"].unique()
+        bloques.append(
+            pd.DataFrame(
+                {
+                    "date_block_num": mes,
+                    "shop_id": tiendas.repeat(len(productos)),
+                    "item_id": np.tile(productos, len(tiendas)),
+                }
+            )
+        )
+    cuadricula = pd.concat(bloques, ignore_index=True)
+    ventas = sales.groupby(["date_block_num", "shop_id", "item_id"], as_index=False)[
+        "item_cnt_day"
+    ].sum()
+    cuadricula = cuadricula.merge(ventas, on=["date_block_num", "shop_id", "item_id"], how="left")
+    cuadricula = cuadricula.rename(columns={"item_cnt_day": "item_cnt_month"})
+    cuadricula["item_cnt_month"] = cuadricula["item_cnt_month"].fillna(0).astype("float32")
+    if test is not None:
+        prueba = test[["shop_id", "item_id"]].assign(
+            date_block_num=MES_TEST, item_cnt_month=np.nan
+        )
+        cuadricula = pd.concat([cuadricula, prueba[cuadricula.columns]], ignore_index=True)
+    return cuadricula.astype(
+        {
+            "date_block_num": "int8",
+            "shop_id": "int8",
+            "item_id": "int16",
+            "item_cnt_month": "float32",
+        }
+    )
+
+
+def agregar_lags(
+    cuadricula: pd.DataFrame,
+    valor: str,
+    niveles: dict[str, tuple[list[str], list[int]]] = LAGS_SELECCIONADOS,
+) -> pd.DataFrame:
+    """Agrega columnas ``{nivel}_lag_{k}`` con el valor del mes ``m - k`` (sin fuga de información).
+
+    Para cada nivel se promedia ``valor`` por mes y por las columnas del nivel (en el par
+    tienda-producto es el propio valor) y se desplaza ``k`` meses hacia adelante: la fila del
+    mes ``m`` solo ve meses anteriores. Los lags quedan nulos si no hay registro en ``m - k``.
+    """
+    resultado = cuadricula
+    for nivel, (columnas, rezagos) in niveles.items():
+        llaves = ["date_block_num", *columnas]
+        promedio = resultado.groupby(llaves, as_index=False, observed=True)[valor].mean()
+        for k in rezagos:
+            desplazado = promedio.rename(columns={valor: f"{nivel}_lag_{k}"})
+            desplazado["date_block_num"] = (desplazado["date_block_num"] + k).astype("int8")
+            desplazado[f"{nivel}_lag_{k}"] = desplazado[f"{nivel}_lag_{k}"].astype("float32")
+            resultado = resultado.merge(desplazado, on=llaves, how="left")
+    return resultado
+
+
+def precio_previo_item(sales: pd.DataFrame, ultimo_mes: int = MES_TEST) -> pd.DataFrame:
+    """Último precio promedio conocido de cada producto **antes** de cada mes (sin fuga).
+
+    Devuelve ``date_block_num``, ``item_id`` y ``precio_previo``: para el mes ``m`` es el precio
+    promedio del mes más reciente anterior a ``m`` en que el producto tuvo ventas. Nulo si el
+    producto nunca se vendió antes de ``m`` (p. ej. los productos nuevos de test).
+    """
+    precio_mes = sales.pivot_table(
+        index="item_id", columns="date_block_num", values="item_price", aggfunc="mean"
+    ).reindex(columns=range(ultimo_mes + 1))
+    previo = precio_mes.ffill(axis=1).shift(1, axis=1)
+    return (
+        previo.stack(future_stack=True)
+        .rename("precio_previo")
+        .reset_index()
+        .astype({"date_block_num": "int8", "item_id": "int16", "precio_previo": "float32"})
+    )
+
+
+def antiguedad_item(cuadricula: pd.DataFrame, sales: pd.DataFrame) -> pd.Series:
+    """Meses desde la primera venta del producto, usando solo meses anteriores (sin fuga).
+
+    Si la primera venta del producto es en el mes ``f`` y la fila es del mes ``m``, vale
+    ``m - f`` cuando ``f < m``; es nulo si el producto no tiene ventas antes de ``m``.
+    Los productos vendidos desde el mes 0 pueden ser más antiguos (el dataset empieza en ene-2013).
+    """
+    primera = sales.groupby("item_id")["date_block_num"].min()
+    meses = cuadricula["date_block_num"].astype("float32")
+    diferencia = meses - cuadricula["item_id"].map(primera).astype("float32")
+    return diferencia.where(diferencia > 0).astype("float32").rename("meses_desde_primera_venta")

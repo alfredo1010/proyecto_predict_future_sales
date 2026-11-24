@@ -35,16 +35,18 @@ Cada integrante trabaja en su propia rama y se integra a `main` vía Pull Reques
 | 3 | Visualizaciones clave, ACF/PACF y conclusiones | 8, 9 y 10 |
 
 Los bloques siguen el orden del enunciado (DEC-012). La sección 10 la redacta el responsable del bloque 3 y la
-revisan los tres. La asignación de los bloques 2 y 3 a integrantes está pendiente de definir. El enunciado completo está en [CLAUDE.md](CLAUDE.md).
+revisan los tres. Bloque 1: Alfredo · bloque 2: Marco · bloque 3: Mario. El enunciado completo está en [CLAUDE.md](CLAUDE.md).
 
 ## Estado del avance
 
 | Secciones | Estado | Responsable |
 |---|---|---|
-| 1 — Estructura y repositorio | ✅ (falta 1.f: screenshots del pull) | Alfredo |
+| 1 — Estructura y repositorio | ✅ Terminado (incluye screenshots del pull) | Alfredo |
 | 2, 3, 4 — Comprensión, validación, faltantes y duplicados | ✅ Terminado | Alfredo |
-| 5, 6, 7 — Descriptivo, temporal y comparación | ⏳ Pendiente | — |
-| 8, 9, 10 — Visualizaciones, ACF/PACF y conclusiones | ⏳ Pendiente | — (10 revisada por los tres) |
+| 5, 6, 7 — Descriptivo, temporal y comparación | ✅ Terminado | Marco |
+| 8, 9, 10 — Visualizaciones, ACF/PACF y conclusiones | ✅ Terminado | Mario (10 revisada por los tres) |
+
+**Parte 1 (EDA) terminada e integrada a `main`.**
 
 El detalle (funciones para cargar los datos limpios, decisiones vigentes y hallazgos pendientes para cada sección)
 está en la sección **"4. Estado del avance"** de [CLAUDE.md](CLAUDE.md) y en [docs/DECISIONES.md](docs/DECISIONES.md).
@@ -138,9 +140,9 @@ En VSCode abrir `notebooks/01_exploratory_data_analysis.ipynb`, seleccionar el k
 
 ## Entregables
 
-- [ ] Enlace al repositorio de GitHub con la estructura de cookiecutter.
-- [ ] Notebook `01_exploratory_data_analysis.ipynb` ejecutado, con gráficas e interpretaciones escritas.
-- [ ] Screenshots del *pull* de cada integrante del equipo.
+- [x] Enlace al repositorio de GitHub con la estructura de cookiecutter.
+- [x] Notebook `01_exploratory_data_analysis.ipynb` ejecutado, con gráficas e interpretaciones escritas.
+- [x] Screenshots del *pull* de cada integrante del equipo.
 
 ---
 

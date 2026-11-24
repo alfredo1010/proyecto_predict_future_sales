@@ -222,3 +222,65 @@ Registro de las decisiones del proyecto: **qué** se decidió, **quién**, **en 
 - **Alternativas descartadas:** traducir las 84 categorías en un CSV de `references/` (acordado como pendiente en
   CLAUDE.md; esta agrupación no lo impide); seleccionar series solo por volumen total (los 3 pares serían la misma bolsa 20949).
 - **Estado:** Vigente
+
+### DEC-015 — Parte 2: cuadrícula mensual, partición temporal y lags seleccionados
+- **Fecha:** 2026-11-23
+- **Autor:** alfredo.mux@galileo.edu
+- **Rama:** alfredo
+- **Sección del enunciado:** Proyecto 2, punto 1.a (`02_feature_exploration.ipynb`)
+- **Decisión:**
+  - Se trabaja sobre una **cuadrícula mensual**: para cada mes 0-33, todas las tiendas × todos los productos con registros
+    ese mes, con 0 donde no hubo ventas (DEC-008); los pares de `test.csv` se agregan como mes 34
+    (`construir_cuadricula_mensual()`, 11,128,050 filas).
+  - **Partición secuencial**: entrenamiento meses 0-26, validación 27-33, test 34 (`MES_FIN_ENTRENAMIENTO`). Todo parámetro
+    aprendido de los datos se ajusta solo con los meses 0-26.
+  - **Lags seleccionados** (`LAGS_SELECCIONADOS`, `agregar_lags()`): par tienda-producto 1, 2, 3 y 12; producto 1;
+    tienda 1 y 12; categoría 1 y 12 (9 lags). Cada lag del mes *m* usa solo el mes *m − k* (sin fuga).
+  - Variables adicionales sin fuga: `precio_previo` (último precio del producto en un mes anterior) y
+    `meses_desde_primera_venta` (solo meses anteriores).
+- **Justificación:** Correlación con `y` de 0.59 (lag 1) a 0.21 (lag 12). Regresión lineal, validación meses 27-33:
+  predecir 0 = 1.116; lag 1 = 0.915; par 1-3 = 0.893; par 1-12 = 0.886; **selección = 0.880**; 24 candidatos = 0.876.
+  En noviembre de 2014 la selección baja el RMSE de 1.127 (par 1-3) a 1.108 gracias a los lags 12 de tienda y categoría.
+  Los lags de tienda y categoría están disponibles en ~97-100 % de los pares de test (los del par, en 47-78 %).
+  **Limitación:** en cada mes solo entran productos con alguna venta ese mes, por lo que en el entrenamiento los productos
+  nuevos siempre vendieron en su primer mes; en `test` no se sabe (363 productos nuevos). No es fuga, pero puede
+  sobreestimar las ventas de productos nuevos: revisar en el notebook 04 el error con `item_sin_historia = 1`.
+- **Alternativas descartadas:** cuadrícula completa de 22,170 productos × 57 tiendas × 34 meses (~43 millones de filas);
+  usar los 12 lags del par (más columnas, menos mejora); usar el precio del propio mes (fuga: no existe para el mes 34).
+- **Estado:** Vigente
+
+### DEC-016 — Parte 2: operaciones de ingeniería de características y mapeos
+- **Fecha:** 2026-11-23
+- **Autor:** alfredo.mux@galileo.edu
+- **Rama:** alfredo
+- **Sección del enunciado:** Proyecto 2, puntos 1.b y 1.c (`02_feature_exploration.ipynb`)
+- **Decisión:**
+  - **i. Imputación numérica:** lags y `meses_desde_primera_venta` → 0 (sin registro = sin ventas), con bandera
+    `item_sin_historia`; `precio_previo` → mediana del precio de su categoría en los meses 0-26 (respaldo: mediana global).
+  - **ii. Imputación categórica (forzada, 5 % al azar, semilla 42):** constante `"Desconocido"` en `ciudad` y
+    `grupo_categoria`.
+  - **iii. Codificación:** one-hot de `grupo_categoria` (14, `oh_grupo_*`) y `tipo_tienda` (3, `oh_tipo_*`); frecuencia de
+    `ciudad` (meses 0-26); `shop_id` e `item_category_id` como identificadores numéricos (variables exógenas).
+    `item_id` **no entra** como variable: el producto se representa con sus lags, categoría, grupo, precio y antigüedad.
+  - **iv. Outliers:** objetivo recortado a [0, 20] (12,378 meses-par, 0.113 %); `precio_previo` con tope en el p99.9 del
+    entrenamiento (22,990). Completa lo que DEC-009 y DEC-013 dejaron para la etapa de modelado.
+  - **v. Transformación:** `log1p` **solo** en `precio_previo`; los lags quedan en unidades.
+  - **vi. Escalado:** `StandardScaler` ajustado con los meses 0-26 en las variables numéricas continuas.
+  - **Mapeos:** tienda → ciudad (`MAPEO_CIUDAD_ES`), tienda → tipo (`TIENDAS_EN_LINEA` = {12, 55}, `TIENDAS_EVENTO` = {9, 20}),
+    categoría → grupo (DEC-014), ciudad → frecuencia y categoría → mediana de precio (aprendidos en los meses 0-26).
+  - **Cambio en el tiempo** (medias de validación desplazadas en la antigüedad y los lags 12): no se transforma; se
+    recomienda **reentrenar el modelo ganador con los meses 0-33** antes de predecir el mes 34 (notebook 04).
+  - Resultado: 32 variables de entrada; la lista completa y el orden de los pasos para el notebook 03 están en la sección 1.c.
+- **Justificación:** Kaggle evalúa con las predicciones recortadas a [0, 20]. La mediana por categoría da un precio
+  realista a los productos nuevos (7.12 % de los pares de test). `"Desconocido"` evita sesgar hacia la moda (Moscú, 22 % de
+  las filas). `log1p` baja la asimetría del precio de 8.69 a 0.47. El escalado permite comparar modelos lineales y de
+  árboles con el mismo preprocesamiento en el notebook 04. Comprobaciones con regresión lineal y árboles
+  (`HistGradientBoostingRegressor`), entrenando con los meses 0-26 y validando con los meses 27-33 (RMSE):
+  - `log1p` en los lags: lineal de 0.8730 a 0.9276 (peor); árboles sin cambio (0.8210).
+  - `item_id` como variable: árboles de 0.8210 a 0.8346 (peor); `shop_id` e `item_category_id` mejoran (0.8279 → 0.8210).
+  - Cambio en el tiempo: ventana 12-26 (0.8225), tope de 12 meses a la antigüedad (0.8254) o quitarla (0.8252) no mejoran;
+    reentrenar hasta el mes 32 para predecir el 33 baja el RMSE de 0.9140 a 0.8895.
+- **Alternativas descartadas:** imputar lags con la media (inventa ventas); moda en las categóricas; one-hot de `ciudad`
+  (30 columnas dispersas) o de `item_id` (22,170); `item_id` como número; `log1p` en los lags; tope a la antigüedad;
+  entrenar solo con los meses 12-26; eliminar solo el precio de 307,980 (no llega a la cuadrícula).
+- **Estado:** Vigente
