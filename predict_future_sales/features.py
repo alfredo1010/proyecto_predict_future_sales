@@ -414,3 +414,45 @@ def antiguedad_item(cuadricula: pd.DataFrame, sales: pd.DataFrame) -> pd.Series:
     meses = cuadricula["date_block_num"].astype("float32")
     diferencia = meses - cuadricula["item_id"].map(primera).astype("float32")
     return diferencia.where(diferencia > 0).astype("float32").rename("meses_desde_primera_venta")
+
+
+# ---------------------------------------------------------------------------
+# Parte 2 — Punto 2 (03_feature_creation): tabla de entrada del pipeline
+# ---------------------------------------------------------------------------
+
+
+def construir_tabla_modelo(
+    ventas: pd.DataFrame, items: pd.DataFrame, test: pd.DataFrame | None = None
+) -> pd.DataFrame:
+    """Tabla de entrada del pipeline de preprocesamiento (pasos previos de la sección 1.c del notebook 02).
+
+    Construye la cuadrícula mensual (con ``test`` como mes 34 si se pasa), agrega ``item_category_id``,
+    el objetivo ``y`` (``item_cnt_month`` recortado a ``LIMITES_OBJETIVO``), los lags de
+    ``LAGS_SELECCIONADOS``, ``precio_previo`` y ``meses_desde_primera_venta``. Todo usa solo meses
+    anteriores (sin fuga). Los nulos se dejan tal cual: los rellena el pipeline.
+    """
+    tabla = construir_cuadricula_mensual(ventas, test)
+    tabla = tabla.merge(items[["item_id", "item_category_id"]], on="item_id", how="left")
+    tabla["item_category_id"] = tabla["item_category_id"].astype("int8")
+    tabla["y"] = tabla["item_cnt_month"].clip(*LIMITES_OBJETIVO)
+    tabla = agregar_lags(tabla, "y", LAGS_SELECCIONADOS)
+    tabla = tabla.merge(precio_previo_item(ventas), on=["date_block_num", "item_id"], how="left")
+    tabla["meses_desde_primera_venta"] = antiguedad_item(tabla, ventas)
+    return tabla
+
+
+def crear_mapeos(shops: pd.DataFrame, item_categories: pd.DataFrame) -> dict:
+    """Diccionarios del ``Mapper``: {columna_nueva: (columna_origen, {valor: traducción})} (DEC-016)."""
+    tiendas = agregar_info_tienda(shops)
+    grupos = agregar_grupo_categoria(item_categories)
+    return {
+        "ciudad": ("shop_id", dict(zip(tiendas["shop_id"], tiendas["ciudad"], strict=True))),
+        "tipo_tienda": (
+            "shop_id",
+            dict(zip(tiendas["shop_id"], tiendas["tipo_tienda"], strict=True)),
+        ),
+        "grupo_categoria": (
+            "item_category_id",
+            dict(zip(grupos["item_category_id"], grupos["grupo_categoria"], strict=True)),
+        ),
+    }

@@ -284,3 +284,29 @@ Registro de las decisiones del proyecto: **qué** se decidió, **quién**, **en 
   (30 columnas dispersas) o de `item_id` (22,170); `item_id` como número; `log1p` en los lags; tope a la antigüedad;
   entrenar solo con los meses 12-26; eliminar solo el precio de 307,980 (no llega a la cuadrícula).
 - **Estado:** Vigente
+
+### DEC-017 — Parte 2: pipeline de preprocesamiento con sklearn y archivo `.pkl`
+- **Fecha:** 2026-11-27
+- **Autor:** alfredo.mux@galileo.edu
+- **Rama:** proyecto_2_pipeline_predict
+- **Sección del enunciado:** Proyecto 2, punto 2 (`03_feature_creation.ipynb`)
+- **Decisión:**
+  - Los pasos que necesitan la historia mes a mes (cuadrícula, objetivo recortado, lags, `precio_previo`, antigüedad) se
+    hacen **antes** del pipeline con `construir_tabla_modelo()` (`features.py`); el resto va **dentro** de un `Pipeline` de
+    sklearn: `Mapper` → `IndicadorNulo` → `ColumnTransformer` (imputación, tope p99.9, `log1p`, frecuencia, one-hot y
+    `StandardScaler`). Salida: las 32 variables de DEC-016.
+  - Cinco transformadores propios en `predict_future_sales/transformers.py`: `Mapper` (operador de mapeo mencionado en el
+    enunciado), `IndicadorNulo`, `ImputadorMedianaPorGrupo`, `TopeCuantil` y `CodificadorFrecuencia`. Los diccionarios del
+    `Mapper` salen de `crear_mapeos()`.
+  - El pipeline se ajusta **solo con los meses 0-26** y se guarda con `joblib` en `models/pipeline_preprocesamiento.pkl`
+    (~15 KB). Se agrega `joblib` a `requirements.txt`.
+  - Los parámetros se aprenden de la **tabla de entrada** del pipeline, no de `sales_train`: tope de precio 14,208 (en
+    DEC-016 era 22,990) y mediana global 299 (era 399). Reemplaza esos dos valores de DEC-016; el resto sigue igual.
+- **Justificación:** El pipeline reproduce la receta del notebook 02: RMSE lineal 0.8730 (igual) y árboles 0.8237 frente a
+  0.8210. Aprender de la tabla de entrada hace que el `.pkl` sea autosuficiente para los notebooks 04 y 05. Las clases van en
+  un módulo porque el `.pkl` guarda la ruta de la clase, no su código. El pipeline cargado produce exactamente la misma salida
+  y no falla con tiendas o categorías desconocidas ni con valores vacíos (0 nulos en la salida).
+- **Alternativas descartadas:** calcular los lags dentro del pipeline (necesitan la historia de cada par); definir las clases en
+  el notebook (el `.pkl` no se podría abrir en otros notebooks); `SimpleImputer(add_indicator=True)` para la bandera (la
+  escalaría); pasar `sales_train` al pipeline para reproducir 22,990 y 399 (el `.pkl` dejaría de ser autosuficiente).
+- **Estado:** Vigente (actualiza los valores de tope y mediana global de DEC-016)

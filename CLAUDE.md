@@ -90,7 +90,7 @@ y no contradigas una decisión registrada sin señalarlo explícitamente.
 ├── notebooks/
 │   ├── 01_exploratory_data_analysis.ipynb   <- Notebook entregable del EDA (Proyecto #1)
 │   ├── 02_feature_exploration.ipynb         <- Proyecto #2, punto 1: selección de lags y transformaciones
-│   ├── 03_feature_creation.ipynb            <- Proyecto #2, punto 2 (pendiente)
+│   ├── 03_feature_creation.ipynb            <- Proyecto #2, punto 2: pipeline de preprocesamiento (.pkl)
 │   ├── 04_model_training_n_tunning.ipynb    <- Proyecto #2, punto 3 (pendiente)
 │   └── 05_inference_calculation.ipynb       <- Proyecto #2, punto 4 (pendiente)
 ├── reports/figures/         <- Figuras exportadas
@@ -101,6 +101,7 @@ y no contradigas una decisión registrada sin señalarlo explícitamente.
     ├── dataset.py           <- Carga / preparación de datos
     ├── features.py          <- Construcción de variables
     ├── plots.py             <- Funciones de visualización
+    ├── transformers.py      <- Proyecto #2: transformadores propios del pipeline (Mapper, etc.)
     └── modeling/            <- (etapas futuras) entrenamiento y predicción
 ```
 
@@ -409,7 +410,7 @@ Defina todo el proceso de entrenamiento y selección de modelos:
 | Punto | Notebook | Estado | Responsable | Decisiones |
 |---|---|---|---|---|
 | 1 | `02_feature_exploration.ipynb` | ✅ Terminado y ejecutado | Alfredo | DEC-015, DEC-016 |
-| 2 | `03_feature_creation.ipynb` | ⏳ Pendiente | (por asignar) | — |
+| 2 | `03_feature_creation.ipynb` | ✅ Terminado y ejecutado → `models/pipeline_preprocesamiento.pkl` | Alfredo | DEC-017 |
 | 3 | `04_model_training_n_tunning.ipynb` | ⏳ Pendiente | (por asignar) | — |
 | 4 | `05_inference_calculation.ipynb` | ⏳ Pendiente | (por asignar) | — |
 
@@ -433,3 +434,14 @@ La **receta completa** está en la sección **1.c** de `02_feature_exploration.i
 - Referencia rápida del punto 1 en validación (meses 27-33): regresión lineal RMSE 0.8730; `HistGradientBoostingRegressor`
   sin ajustar RMSE 0.8210; predecir siempre 0 = 1.116.
 - El notebook 02 tarda ~8 minutos en ejecutarse completo (las comprobaciones adicionales entrenan modelos con ~9 millones de filas).
+
+### Resultado del punto 2 (lo que necesitan los puntos 3 y 4)
+- **Pipeline ajustado (meses 0-26):** `models/pipeline_preprocesamiento.pkl` (cargar con `joblib.load`). Recibe la tabla de
+  `construir_tabla_modelo(ventas, items, test)` y devuelve las **32 variables**; descarta `item_id`, `date_block_num`,
+  `item_cnt_month` e `y`. El objetivo es `tabla["y"]` (no entra al pipeline).
+- **Clases propias** en `predict_future_sales/transformers.py` (`Mapper`, `IndicadorNulo`, `ImputadorMedianaPorGrupo`,
+  `TopeCuantil`, `CodificadorFrecuencia`): el paquete debe estar instalado (`pip install -e .`) para abrir el `.pkl`.
+- **Referencia en validación (27-33):** lineal 0.8730 · `HistGradientBoostingRegressor` sin ajustar 0.8237.
+- **Para el notebook 04:** `Pipeline([("preprocesamiento", <pkl>), ("modelo", modelo)])`; para la predicción final,
+  `sklearn.base.clone()` del pipeline completo y reajustar con los meses 0-33.
+- El notebook 03 tarda ~1.5 minutos en ejecutarse.

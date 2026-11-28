@@ -2,6 +2,7 @@
 # Si agregas una librería, agrégala AQUÍ; environment.yml instala desde este archivo.
 ipykernel
 ipython
+joblib
 jupyterlab
 loguru
 matplotlib
